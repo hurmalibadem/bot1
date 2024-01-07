@@ -1,0 +1,37 @@
+const prefix = "!";
+client.on('message', (message) => {
+  if (!message.content.startsWith(prefix) || message.author.bot) return;
+
+  const args = message.content.slice(prefix.length).split(' ');
+  const command = args.shift().toLowerCase();
+
+  if (command === 'afk') {
+    const reason = args.join(' ');
+
+    // Check if the user is in a voice channel
+    if (message.member.voice.channel) {
+      const afkChannelId = '1189322952894844999'; // Replace with your AFK channel ID
+
+      // Move the user to the AFK channel
+      message.member.voice.setChannel(afkChannelId);
+
+      // Update user's nickname with reason
+      const nickname = `${message.member.displayName} [${reason}]`;
+      message.member.setNickname(nickname).catch(console.error);
+
+      // Reply with a confirmation message
+      message.reply(`You are now AFK in ${message.member.voice.channel.name} with reason: ${reason}`);
+    } else {
+      message.reply('You need to be in a voice channel to use this command.');
+    }
+  }
+});
+
+client.on('voiceStateUpdate', (oldState, newState) => {
+  // Check if the user is moving from the AFK channel
+  if (oldState.channel && oldState.channel.id === '1189322952894844999') {
+    // Reset user's nickname to the original nickname
+    const originalNickname = oldState.member.displayName.replace(/\s\[[^\]]*\]/, '');
+    oldState.member.setNickname(originalNickname).catch(console.error);
+  }
+});
